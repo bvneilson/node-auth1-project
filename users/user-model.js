@@ -8,15 +8,20 @@ function register(user) {
 }
 
 function login(user) {
-  return db('users').where('username', user.username).andWhere('password', user.password);
+  return db('users').where('username', user.username);
 }
 
 function getUsers(user) {
   return db('users');
 }
 
+function findUser(username) {
+  return db('users').where('username', username);
+}
+
 module.exports = {
   register,
   login,
-  getUsers
+  getUsers,
+  findUser
 }
