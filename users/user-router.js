@@ -23,6 +23,7 @@ router.post('/login', validation, (req, res) => {
     if (!user || !bcrypt.compareSync(credentials.password, user.password)) {
       res.status(401).json({error: 'Incorrect credentials'});
     } else {
+      req.session.user = user;
       res.status(200).json({messages: `Welcome ${user.username}!`});
     }
   }).catch(err => {
@@ -38,6 +39,20 @@ router.get('/users', restricted, (req, res) => {
   })
 });
 
+router.get('/logout', (req, res) => {
+  if (req.session && req.session.user) {
+    req.session.destroy(err => {
+      if (err) {
+        res.send('error logging out')
+      } else {
+        res.send('log out successful');
+      }
+    })
+  } else {
+    res.send('you never logged in');
+  }
+})
+
 //Middleware
 
 function validation(req, res, next) {
@@ -51,21 +66,10 @@ function validation(req, res, next) {
 function restricted(req, res, next) {
   const { username, password } = req.headers;
 
-  if (username && password) {
-    db.findUser({ username })
-      .first()
-      .then(user => {
-        if (user && bcrypt.compareSync(password, user.password)) {
-          next();
-        } else {
-          res.status(401).json({ message: 'Invalid Credentials' });
-        }
-      })
-      .catch(error => {
-        res.status(500).json({ message: 'Unexpected error' });
-      });
+  if (req.session && req.session.user) {
+    next();
   } else {
-    res.status(400).json({ message: 'No credentials provided' });
+    res.status(401).json({ message: 'You shall not pass!' });
   }
 }
 
